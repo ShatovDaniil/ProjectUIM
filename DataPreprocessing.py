@@ -5,7 +5,9 @@ Created on Mon Oct 17 18:52:48 2022
 @author: rredi
 """
 import os
-
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def DataPreprocessing(inputData):
@@ -43,5 +45,22 @@ def DataPreprocessing(inputData):
 
 path = "C:/Users/Daniil/PycharmProjects/pythonProject/UIMprojekt/TrainNBAData.csv"
 DataPreprocessing(path)
+
+def VizPairplot(preprocessedData):
+    cols = ['gp', 'min', 'pts', 'fg', 'ft']
+
+    new_column_names = {
+        'gp': 'Počet zápasů',
+        'min': 'Počet minut',
+        'pts': 'Počet bodů ',
+        'fg': 'Střelecké pokusy(%)',
+        'ft': 'Trestné hody(%)',
+    }
+
+    df_renamed = preprocessedData[cols].rename(columns=new_column_names)
+
+    sns.pairplot(df_renamed)
+    plt.show()
+
 
 
