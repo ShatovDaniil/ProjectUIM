@@ -64,3 +64,17 @@ def VizPairplot(preprocessedData):
 
 
 
+def Vizhist(preprocessedData:object,
+            name_column:str):
+    plt.figure(figsize= (14,5))
+    sns.histplot(preprocessedData[name_column],kde = True)
+    plt.show()
+
+def VizBoxplot(preprocessedData:object,
+            name_column:str):
+    plt.figure(figsize=(20,12))
+    sns.boxplot(x=preprocessedData[name_column])
+
+    plt.show()
+
+
