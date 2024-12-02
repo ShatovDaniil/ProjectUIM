@@ -10,6 +10,10 @@ import numpy as np
 from MyModel import MyModel
 from GetScoreCareer import GetScoreCareer
 from DataPreprocessing import DataPreprocessing
+from TrainingModel import train_model
+from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def Main(filePath):
@@ -50,7 +54,8 @@ def Main(filePath):
     inputData = pd.read_csv(f"{filePath}\\TrainNBAData.csv")
     numRecords = inputData.shape[0]
     confMatrix = np.zeros((2,2))
-    
+
+
     for idx in range(numRecords):
         targetClass = inputData.target_5yrs[idx]
         if targetClass=='no':
@@ -59,11 +64,15 @@ def Main(filePath):
             targetClass = 1
             
         #%% 2 - Predzpracovani dat
-        preprocessedData = DataPreprocessing(inputData.iloc[:idx,2:21]) # Do zpracovani vstupuji vsechny informace o hraci (krome poradoveho cisla a jmena)
-        
-        
+        preprocessedData = DataPreprocessing(inputData.iloc[:idx,2:21]) # Do zpracovani vstupuji vsechny informace o hraci (krome poradoveho cisla,jmena,score)
+
+        # %% 2.5 - учу модель
+        #print(inputData['target_5yrs'])
+        model = train_model(preprocessedData, inputData.iloc[:idx, 21])  #Výstup predikce (tzv. požadovaná hodnota) je obsažena v posledním (22.) s
+
         #%% 3 - Vybaveni natrenovaneho modelu
-        outputClass = MyModel(preprocessedData) 
+        outputClass = MyModel(preprocessedData)
+        plt.imshow()
         
         if outputClass == 0 or outputClass == 1:
             confMatrix[outputClass,targetClass] += 1
@@ -75,4 +84,4 @@ def Main(filePath):
     return se,sp,acc,ppv,fScore, confMatrix
 
 
-se,sp,acc,ppv,fScore, confMatrix = Main('C:\\...........')
+se,sp,acc,ppv,fScore, confMatrix = Main('C:\\Users\\79028\\Documents\\UNI\\VUT\\PROJEKT UIM')

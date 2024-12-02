@@ -4,77 +4,67 @@ Created on Mon Oct 17 18:52:48 2022
 
 @author: rredi
 """
-import os
+import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 def DataPreprocessing(inputData):
-    """
-    Funkce slouzi pro predzpracovani dat, ktera slouzi k testovani modelu. Veskery kod, ktery vedl k nastaveni
-    jednotlivych kroku predzpracovani (vcetne vypoctu konstant, prumeru, smerodatnych odchylek, atp.) budou odevzdany
-    spolu s celym projektem.
 
-    :parameter inputData:
-        Vstupni data, ktera se budou predzpracovavat.
-    :return preprocessedData:
-        Predzpracovana data na vystup
-    """
-
-    try:
-        base, ext = os.path.splitext(inputData)
-        output_file = f"{base}_cleaned{ext}"
-
-        with open(inputData, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-            clean_lines = []
-
-            for line in lines:
-                if "NaN" not in line:
-                    clean_lines.append(line)
-
-        with open(output_file, 'w', encoding='utf-8') as file:
-            file.writelines(clean_lines)
-        return output_file
+    #ZBAVIM SE MOZNYCH ANOMALNICH HODNOT VE SLOUPCICH FG Střelecké pokusy (%)', 'x3P Tříbodové hody (%)', 'FT Trestné hody (%), KDE MAXIMUM JE 100%
+    #HODNOTY >100% NAHRADIM NaN, O PAR KROKU POZDEJI BUDU JE NAHRAZOVAT MEDIANEM VE SLOUPCI VE SKUPINE
+    columns_to_check = ['fg', 'x3p', 'ft']
+    for col in columns_to_check:
+        inputData[col] = inputData[col].apply(lambda x: np.nan if x > 100 else x)
 
 
-    except:
-        print("Ne")
-        return None
+   #ROZDELIM SPORTOVCE NA DVE SKUPINY PODLE PARAMETRU PTS(POCET BODU) PRO NASLEDUJICI ANALYZU
 
+    max_pts = 0
+    for value in inputData['pts']:
+        if not pd.isna(value):
+            if value > max_pts:
+                max_pts = value
+    prah_rozdeleni = np.round(max_pts/2)
+
+    index_sportovce_nad = []
+    index_sportovce_pod = []
+    for idx, value in enumerate(inputData['pts']):
+        if pd.isna(value) or value <= prah_rozdeleni:
+            index_sportovce_pod.append(idx)
+        else:
+            index_sportovce_nad.append(idx)
+
+    group_nad = inputData.loc[index_sportovce_nad]
+    group_pod = inputData.loc[index_sportovce_pod]
+
+    #BUDU HLEDAT CHYBEJICI HODNOTY A NAHRAZOVAT JE MEDIANEM VE SKUPINE
+
+    for column in group_nad.columns:
+        median_value = group_nad[column].median()
+        group_nad[column].fillna(median_value, inplace=True)
+
+    inputData.loc[index_sportovce_nad] = group_nad
+
+    for column_p in group_pod.columns:
+        median_value = group_pod[column_p].median()
+        group_pod[column_p].fillna(median_value, inplace=True)
+
+
+    inputData.loc[index_sportovce_pod] = group_pod
+
+
+
+    preprocessedData = inputData.copy()
+
+    #MATICE KORELACE PRIZNAKU PTS S OSTATNIMY PRIZNAKY
+    correlation_matrix = preprocessedData.corr()
+    correlation_with_pts = correlation_matrix['pts']
+
+
+    print("РАЗМЕР НА ВЫХОДЕ ИЗ ПРЕДОБРАБОТКИ:", preprocessedData.shape)
+
+    return preprocessedData
 path = "C:/Users/Daniil/PycharmProjects/pythonProject/UIMprojekt/TrainNBAData.csv"
 DataPreprocessing(path)
-
-def VizPairplot(preprocessedData):
-    cols = ['gp', 'min', 'pts', 'fg', 'ft']
-
-    new_column_names = {
-        'gp': 'Počet zápasů',
-        'min': 'Počet minut',
-        'pts': 'Počet bodů ',
-        'fg': 'Střelecké pokusy(%)',
-        'ft': 'Trestné hody(%)',
-    }
-
-    df_renamed = preprocessedData[cols].rename(columns=new_column_names)
-
-    sns.pairplot(df_renamed)
-    plt.show()
-
-
-
-def Vizhist(preprocessedData:object,
-            name_column:str):
-    plt.figure(figsize= (14,5))
-    sns.histplot(preprocessedData[name_column],kde = True)
-    plt.show()
-
-def VizBoxplot(preprocessedData:object,
-            name_column:str):
-    plt.figure(figsize=(20,12))
-    sns.boxplot(x=preprocessedData[name_column])
-
-    plt.show()
-
 
