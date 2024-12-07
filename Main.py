@@ -51,7 +51,7 @@ def Main(filePath):
     inputData = pd.read_csv(f"{filePath}\\TrainNBAData.csv")
     numRecords = inputData.shape[0]
     confMatrix = np.zeros((2,2))
-    #inputData['target_5yrs'] = inputData['target_5yrs'].map({'yes': 1, 'no': 0})
+
 
     for idx in range(numRecords):
         targetClass = inputData.target_5yrs[idx]
@@ -64,13 +64,18 @@ def Main(filePath):
         preprocessedData = DataPreprocessing(inputData) # Do zpracovani vstupuji vsechny informace o hraci (krome poradoveho cisla,jmena,score)
 
         #%% 3 - Vybaveni natrenovaneho modelu
-        outputClass = MyModel(preprocessedData.drop(columns=['target_5yrs', 'Var1', 'name']))
+        outputClasses = MyModel(preprocessedData.drop(columns=['target_5yrs', 'Var1', 'name','ft','ast' ,'x3p_made', 'x3pa', 'x3p']))
         #plt.imshow()
-        
-        if outputClass.size == 1 and (outputClass == 0 or outputClass == 1):
-            confMatrix[outputClass,targetClass] += 1
-        else:
-             print('Invalid class number. Operation aborted.')   
+
+        for outputClass in outputClasses:
+
+            if outputClass == 'no':
+
+                confMatrix[0,targetClass] += 1
+            elif outputClass == 'yes':
+                confMatrix[1,targetClass] += 1
+            else:
+                print('Invalid class number. Operation aborted.')
     se,sp,acc,ppv,fScore = GetScoreCareer(confMatrix)
     print(f"Sensitivity (Se): {se:.2f}")
     print(f"Specificity (Sp): {sp:.2f}")
