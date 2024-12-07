@@ -7,13 +7,10 @@ Created on Wed Oct  5 15:21:22 2022
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from DataPreprocessing import DataPreprocessing
 from MyModel import MyModel
 from GetScoreCareer import GetScoreCareer
-from DataPreprocessing import DataPreprocessing
-from TrainingModel import train_model
-from sklearn.linear_model import LogisticRegression
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def Main(filePath):
@@ -54,7 +51,7 @@ def Main(filePath):
     inputData = pd.read_csv(f"{filePath}\\TrainNBAData.csv")
     numRecords = inputData.shape[0]
     confMatrix = np.zeros((2,2))
-
+    #inputData['target_5yrs'] = inputData['target_5yrs'].map({'yes': 1, 'no': 0})
 
     for idx in range(numRecords):
         targetClass = inputData.target_5yrs[idx]
@@ -64,24 +61,29 @@ def Main(filePath):
             targetClass = 1
             
         #%% 2 - Predzpracovani dat
-        preprocessedData = DataPreprocessing(inputData.iloc[:idx,2:21]) # Do zpracovani vstupuji vsechny informace o hraci (krome poradoveho cisla,jmena,score)
-
-        # %% 2.5 - учу модель
-        #print(inputData['target_5yrs'])
-        model = train_model(preprocessedData, inputData.iloc[:idx, 21])  #Výstup predikce (tzv. požadovaná hodnota) je obsažena v posledním (22.) s
+        preprocessedData = DataPreprocessing(inputData) # Do zpracovani vstupuji vsechny informace o hraci (krome poradoveho cisla,jmena,score)
 
         #%% 3 - Vybaveni natrenovaneho modelu
-        outputClass = MyModel(preprocessedData)
-        plt.imshow()
+        outputClass = MyModel(preprocessedData.drop(columns=['target_5yrs', 'Var1', 'name']))
+        #plt.imshow()
         
-        if outputClass == 0 or outputClass == 1:
+        if outputClass.size == 1 and (outputClass == 0 or outputClass == 1):
             confMatrix[outputClass,targetClass] += 1
         else:
              print('Invalid class number. Operation aborted.')   
     se,sp,acc,ppv,fScore = GetScoreCareer(confMatrix)
-        
+    print(f"Sensitivity (Se): {se:.2f}")
+    print(f"Specificity (Sp): {sp:.2f}")
+    print(f"Accuracy (Acc): {acc:.2f}")
+    print(f"Positive Predictive Value (PPV): {ppv:.2f}")
+    print(f"F1 Score (FScore): {fScore:.2f}")
         
     return se,sp,acc,ppv,fScore, confMatrix
 
 
-se,sp,acc,ppv,fScore, confMatrix = Main('C:\\Users\\79028\\Documents\\UNI\\VUT\\PROJEKT UIM')
+#se,sp,acc,ppv,fScore, confMatrix = Main('C:\\Users\\79028\\Documents\\UNI\\VUT\\PROJEKT UIM')
+
+#se,sp,acc,ppv,fScore, confMatrix = Main('C:\\Users\\79028\\Documents\\UNI\\VUT\\PROJEKT UIM')
+if __name__ == "__main__":
+    filePath = "C:\\Users\\MagicBook\\PycharmProjects\\pythonProject\\ProjectUIM"
+    se, sp, acc, ppv, fScore, confMatrix = Main(filePath)
