@@ -5,6 +5,7 @@ Created on Wed Oct  5 14:03:17 2022
 @author: xredin00
 """
 import numpy as np
+from joblib import load
 
 def MyModel(data):
 #     Funkce slouzi k implementaci nauceneho modelu. Vas model bude ulozen v samostatne promenne a se spustenim se aplikuje
@@ -17,6 +18,10 @@ def MyModel(data):
 #Vystup:            output:         zarazeni objektu do tridy
 
 
-    output = np.random.randint(0,2)
-    
+    model_filename = r"C:\Users\MagicBook\PycharmProjects\pythonProject\ProjectUIM\trained_model.joblib"
+
+    model = load(model_filename)
+    output = model.predict(data)
+
+
     return output
